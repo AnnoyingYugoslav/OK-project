@@ -3,6 +3,9 @@
 #include<fstream>
 #include<vector>
 #include<tuple>
+#include<array>
+
+#define MAX_TIME 500
 
 using Task = std::tuple<int,int>;
 using Job = std::vector<Task>;
@@ -71,21 +74,29 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
     }
     return problem;
 }
-std::vector<std::vector<int>> solveProblem(std::vector<Job>){ //rozwiązuje vector problemu (po prostu)
-    int parametr = 1;
-}
 
-std::vector<std::vector<int>> solveProblem(std::vector<Job>, int maxtime){ //rozwiązuje vector problemu z limitem czasowym
+std::vector<std::vector<int>> solveProblem(std::vector<Job>, int maxtime){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
     int parametr = 1;
 }
 
 //wywoałne : ./a.out plikodczytu format(01) ewentualnymaxczas(ms)
 int main(int argc, char* argv[]){
     std::tuple<int,int> info;
+    std::vector<std::vector<int>> solution;
+    std::vector<Job> problem;
     if(*argv[2] == '0'){
-        readProblem1(argv[1], &info);
+        problem = readProblem1(argv[1], &info);
     }
     else if(*argv[2] == '1'){
-        readProblem2(argv[1], &info);
+        problem = readProblem2(argv[1], &info);
+    }
+    else{
+        std::cerr << "Error: Nie poprawna metoda wywłoania. Wybierz zakres 0 do 1 \n";
+    }
+    if(sizeof(argv) > 3){
+        solution = solveProblem(problem, *argv[3]);
+    }
+    else{
+        solution = solveProblem(problem, MAX_TIME);
     }
 }
