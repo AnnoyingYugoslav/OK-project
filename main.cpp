@@ -25,7 +25,6 @@ bool isMember(int value, std::vector<int> testCase){
 
 std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* info){ //tworzy vector problemu
     std::ifstream file(filename);
-
     if (!file.is_open()) {
         std::cerr << "Error: Nie można otworzyć pliku " << filename << "\n";
         return {};
@@ -38,12 +37,14 @@ std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* 
     *info = std::make_tuple(rows, colm);
     std::vector<Job> problem;
     for(int i = 0; i < rows; i++){
+        problem.push_back({});
         for(int j = 0; j < colm; j++){
             int x, y;
             if (!(file >> x >> y)) {
                 std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
                 return {};
             }
+            std::cout << "Checkpoint1\n";
             problem[i].push_back(std::make_tuple(x, y));
     }
     }
@@ -64,13 +65,14 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
     *info = std::make_tuple(rows, colm);
     std::vector<Job> problem;
     for(int i = 0; i < rows; i++){
+        problem.push_back({});
         for(int j = 0; j < colm; j++){
             int x;
             if (!(file >> x)) {
                 std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
                 return {};
             }
-            problem[i][j] = std::make_tuple(0, x);
+            problem[i].push_back(std::make_tuple(0, x));
         }
     }
     for(int i = 0; i < rows; i++){
@@ -262,7 +264,9 @@ int main(int argc, char* argv[]){
     }
     else{
         std::cerr << "Error: Nie poprawna metoda wywłoania. Wybierz zakres 0 do 1 \n";
+        return 1;
     }
+    std::cout << "Checkpoint3\n";
     if(argc > 3){
         int y = atoi(argv[3]);
         solution = solveProblem(problem, y, info);
