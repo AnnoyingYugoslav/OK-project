@@ -182,7 +182,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
 
             if(processes.size() == 0){
                 std::cerr << "Erorr: no processes detected";
-                return;
+                return sol;
             }
             std::sort(processes.begin(), processes.end()); //to jest źle, segreguje jakby to była jedna liczba
             if(processes.size() > par1){
@@ -201,7 +201,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
             }
             if(originalTaskId == -1){
                 std::cerr << "Error: value not found";
-                return;
+                return sol;
             }
             if (!localZad.at(originalTaskId).empty()) {
                 localZad.at(originalTaskId).erase(localZad[originalTaskId].begin());
@@ -233,7 +233,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
         }
         if(localEndTime == -1){
             std::cerr << "Error: no solution found";
-            return;
+            return sol;
         }
         std::cout<<"Local end time: "<<localEndTime<<"\n";
         if(endTime == -1){
