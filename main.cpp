@@ -22,6 +22,9 @@ bool isMember(int value, std::vector<int> testCase){
     }
     return false;
 }
+bool compareSecond(const std::tuple<int, int>& a, const std::tuple<int, int>& b) {
+    return std::get<1>(a) < std::get<1>(b);
+}
 
 std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* info){ //tworzy vector problemu
     std::ifstream file(filename);
@@ -44,9 +47,8 @@ std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* 
                 std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
                 return {};
             }
-            std::cout << "Checkpoint1\n";
             problem[i].push_back(std::make_tuple(x, y));
-    }
+        }
     }
     return problem;
 }
@@ -82,7 +84,7 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
                 std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
                 return {};
             }
-            std::get<0>(problem[i][j]) = x;
+            std::get<0>(problem[i][j]) = x- 1;
         }
 
     }
@@ -90,12 +92,12 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
 }
 
 std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, std::tuple<int,int> info){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
-    const std::chrono::seconds timeout(MAX_TIME);
+    const std::chrono::seconds timeout(maxtime);
     auto start_time = std::chrono::steady_clock::now();
 
 
-    int par0 = 1; //ile maszyn - tunning parametr
-    int par1 = 4; //ile procesóww - tunning parametr+
+    int par0 = 1 * std::get<1>(info); //ile maszyn - tunning parametr
+    int par1 = 1 *  std::get<0>(info); //ile procesóww - tunning parametr+
 
 
     std::vector<std::vector<int>> sol; //rozwiązanie, po jobach
@@ -111,6 +113,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
         auto current_time = std::chrono::steady_clock::now();
         auto elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(current_time - start_time);
         if (elapsed_time >= timeout){
+            std::cout << "Best end time: " << endTime << "\n";
             return sol;
             /*
             for(int i = 0; i < sol.size(); i++){
@@ -129,23 +132,31 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
         std::vector<std::vector<int>> localSol; // rozwiązanie lokalne
 
         //generacja danych startowych
-        for(int i = 0; i < std::get<0>(info); i++){
+        for(int i = 0; i < std::get<1>(info); i++){
+            localCurrentEndTimeM.push_back(0);
             machineUse.push_back(0);
+        }
+        for(int i = 0; i < std::get<0>(info); i++){
             localCurrentEndTimeP.push_back(0);
             localSol.push_back({});
             for(int j = 0; j < localZad.at(i).size(); j++){
-                machineUse[i] = machineUse[i] + std::get<1>(localZad[i][j]);
+                machineUse[std::get<0>(localZad[i][j])] = machineUse[std::get<0>(localZad[i][j])] + std::get<1>(localZad[i][j]);
             }
         }
-        for(int i = 0; i < std::get<1>(info); i++){
-            localCurrentEndTimeM.push_back(0);
-        }
-
         while(1){
+            std::cout << "Checkpoint1";
             //sprawdz, czy koniec
             notDone = 0;
-            for(int i = 0; i < std::get<1>(info); i++){
+            for(int i = 0; i < std::get<0>(info); i++){
                 if(localZad.at(i).size() != 0){
+                    /*std::cout << "Next: \n";
+                    for(int i = 0; i < localZad.size(); i++){
+                        for(int j = 0; j < localZad[i].size(); j++){
+                            std::cout << std::get<1>(localZad[i][j]) << " ";
+                        }
+                        std::cout << "\n";
+                    }
+                    */
                     notDone = 1;
                 }
             }
@@ -167,7 +178,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
             }
             //wybierz najkrótsze procesy (sprawdzając, czy conajmniej 1 jest poprawne)
             std::vector<Task> processes;
-            for(int i = 0; i < std::get<1>(info); i++){
+            for(int i = 0; i < std::get<0>(info); i++){
                 if(localZad.at(i).size() > 0){
                     if(isMember(std::get<0>(localZad[i][0]), longestMach)){
                         processes.push_back(localZad[i][0]);
@@ -175,7 +186,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
                 }
             }
             if(processes.size() == 0){
-                for(int i = 0; i < std::get<1>(info); i++){
+                for(int i = 0; i < std::get<0>(info); i++){
                     if(localZad.at(i).size() > 0){
                         processes.push_back(localZad[i][0]);
                     }
@@ -186,7 +197,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
                 std::cerr << "Erorr: no processes detected";
                 return sol;
             }
-            std::sort(processes.begin(), processes.end()); //to jest źle, segreguje jakby to była jedna liczba
+            std::sort(processes.begin(), processes.end(),compareSecond); //to jest źle, segreguje jakby to była jedna liczba -> naprawione
             if(processes.size() > par1){
                 processes.resize(par1);
             }
@@ -195,8 +206,9 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
             int randomInt = distribution(gen);
             std::tuple<int, int> chosenElement;
             chosenElement = processes[randomInt];
+            //std::cout << std::get<1>(chosenElement) << " ";
             int originalTaskId = -1;
-            for(int i = 0; i <std::get<1>(info); i++){
+            for(int i = 0; i <std::get<0>(info); i++){
                 if(std::get<0>(localZad[i][0]) == std::get<0>(chosenElement) && std::get<1>(localZad[i][0]) == std::get<1>(chosenElement)){
                     originalTaskId = i;
                 }
@@ -208,6 +220,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
             if (!localZad.at(originalTaskId).empty()) {
                 localZad.at(originalTaskId).erase(localZad[originalTaskId].begin());
             }
+            std::cout << "Checkpoint2";
             /* testing mechanism
             for (int i = 0; i < std::get<1>(info); i++) {
                 std::cout << "Machine " << i << " queue size: " << localZad.at(i).size() << std::endl;
@@ -215,20 +228,25 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
             */
             //update currentEndTime, machineUse i localSol
             if(localCurrentEndTimeP[originalTaskId] >= localCurrentEndTimeM[std::get<0>(chosenElement)]){
-                localSol.at(originalTaskId).push_back((localCurrentEndTimeP[originalTaskId] + std::get<1>(chosenElement)));
+                //std::cout << (localCurrentEndTimeP[originalTaskId] + std::get<1>(chosenElement)) << " ";
+                localSol[originalTaskId].push_back((localCurrentEndTimeP[originalTaskId] + std::get<1>(chosenElement)));
                 localCurrentEndTimeP[originalTaskId] = localCurrentEndTimeP[originalTaskId] + std::get<1>(chosenElement);
                 localCurrentEndTimeM[std::get<0>(chosenElement)] = localCurrentEndTimeP[originalTaskId];
+                //std::cout << std::get<1>(chosenElement) << " ";
             }
             else{
+                //std::cout << (localCurrentEndTimeM[std::get<0>(chosenElement)] + std::get<1>(chosenElement)) << " ";
                 localSol[originalTaskId].push_back((localCurrentEndTimeM[std::get<0>(chosenElement)] + std::get<1>(chosenElement)));
                 localCurrentEndTimeM[std::get<0>(chosenElement)] = localCurrentEndTimeM[std::get<0>(chosenElement)] + std::get<1>(chosenElement);
                 localCurrentEndTimeP[originalTaskId] = localCurrentEndTimeM[std::get<0>(chosenElement)];
+                //std::cout << std::get<1>(chosenElement) << " ";
             }
             longestTime[originalTaskId] = longestTime[originalTaskId] - std::get<1>(chosenElement);
+            std::cout << "Checkpoint3\n";
         }
         //if max(localEndTime) < EndTime (if not -1) -> sol = localSol, EndTime = max(localEndTime)
         int localEndTime = -1;
-        for(int i = 0; i < std::get<1>(info); i++){
+        for(int i = 0; i < std::get<0>(info); i++){
             if(localCurrentEndTimeP[i] > localEndTime){
                 localEndTime = localCurrentEndTimeP[i];
             }
@@ -248,6 +266,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
         }
         ilePow++;
     }
+    return sol;
 }
 
 //wywoałne : ./a.out plikodczytu format(01) ewentualnymaxczas(ms)
@@ -266,7 +285,6 @@ int main(int argc, char* argv[]){
         std::cerr << "Error: Nie poprawna metoda wywłoania. Wybierz zakres 0 do 1 \n";
         return 1;
     }
-    std::cout << "Checkpoint3\n";
     if(argc > 3){
         int y = atoi(argv[3]);
         solution = solveProblem(problem, y, info);
