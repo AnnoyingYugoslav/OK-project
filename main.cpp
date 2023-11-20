@@ -94,7 +94,7 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
     return problem;
 }
 
-std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, std::tuple<int,int> info){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
+std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtime, std::tuple<int,int> info){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
     const std::chrono::seconds timeout(maxtime);
     auto start_time = std::chrono::steady_clock::now();
 
@@ -102,7 +102,13 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job> zad, int maxtime, st
     int par0 = PARM * std::get<1>(info); //ile maszyn - tunning parametr
     int par1 = PARP *  std::get<0>(info); //ile procesóww - tunning parametr+
 
-
+    std::vector<Job> zad;
+    for(int i = 0; i < danezad->size(); i++){
+        zad.push_back({});
+        for(int j = 0; j < danezad->at(i).size(); j++){
+            zad.at(i).push_back(danezad->at(i).at(j));
+        }
+    }
     std::vector<std::vector<int>> sol = {};
     std::vector<std::vector<int>> sol2 = {}; //rozwiązanie, po jobach
     std::vector<int> localCurrentEndTimeP; // czas, w którym dany proces się aktualnie kończy
@@ -403,10 +409,10 @@ int main(int argc, char* argv[]){
     */
     if(argc > 3){
         int y = atoi(argv[3]);
-        solution = solveProblem(problem, y, info);
+        solution = solveProblem(&problem, y, info);
     }
     else{
-        solution = solveProblem(problem, MAX_TIME, info);
+        solution = solveProblem(&problem, MAX_TIME, info);
     }
     return 0;
 }
