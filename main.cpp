@@ -42,6 +42,7 @@ std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* 
     }
     *info = std::make_tuple(rows, colm);
     std::vector<Job> problem;
+    problem.reserve(100);
     for(int i = 0; i < rows; i++){
         problem.push_back({});
         for(int j = 0; j < colm; j++){
@@ -72,6 +73,7 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
     std::getline(file, line);
     std::getline(file, line);
     std::vector<Job> problem;
+    problem.reserve(100);
     for(int i = 0; i < rows; i++){
         problem.push_back({});
         for(int j = 0; j < colm; j++){
@@ -122,12 +124,33 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtim
     std::vector<int> longestMach; // -||- maszyny
     std::vector<Task> processes;
     std::vector<Job> localZad; //do wybierania procesów
+    std::vector<std::vector<int>> localSol; // rozwiązanie lokalne
     int endTime = -1;
     int ilePow = 0;
 
+    //experimental reserve
+    ///*
+    localCurrentEndTimeM.reserve(std::get<0>(info));
+    localCurrentEndTimeP.reserve(std::get<1>(info));
+    machineUse.reserve(std::get<1>(info));
+    longestTime.reserve(std::get<0>(info));
+    longestMach.reserve(std::get<1>(info));
+    processes.reserve(std::get<0>(info));
+    localZad.reserve(std::get<0>(info));
+    sol.reserve(std::get<0>(info));
+    sol2.reserve(std::get<0>(info));
+    localSol.reserve(std::get<0>(info));
+    for(int i = 0; i < std::get<0>(info); i++){
+            sol[i].reserve(std::get<1>(info));
+            sol2[i].reserve(std::get<1>(info));
+            localSol[i].reserve(std::get<1>(info));
+    }
+
+    //*/
+
+
     std::random_device rd;
     std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
-    std::vector<std::vector<int>> localSol; // rozwiązanie lokalne
     while(1){
         //ilePow++;
         //std::cout<<"KOLEJNA PETLA\n";
