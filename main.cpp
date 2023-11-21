@@ -11,8 +11,8 @@
 #include<stdexcept>
 
 #define MAX_TIME 150
-#define PARM 1
-#define PARP 1
+#define PARM 0.6
+#define PARP 0.5
 
 using Task = std::tuple<int,int>;
 using Job = std::vector<Task>;
@@ -58,6 +58,7 @@ std::vector<Job> readProblem1(const std::string& filename, std::tuple<int,int>* 
 
 std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* info){
     std::ifstream file(filename);
+    std::string line;
     if (!file.is_open()) {
         std::cerr << "Error: Nie można otworzyć pliku " << filename << "\n";
         return {};
@@ -68,23 +69,27 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
         return {};
     }
     *info = std::make_tuple(rows, colm);
+    std::getline(file, line);
+    std::getline(file, line);
     std::vector<Job> problem;
     for(int i = 0; i < rows; i++){
         problem.push_back({});
         for(int j = 0; j < colm; j++){
             int x;
             if (!(file >> x)) {
-                std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
+                std::cerr << "Error: blad czytania w lini " << (i + 1) << "\n";
                 return {};
             }
             problem[i].push_back(std::make_tuple(0, x));
         }
     }
+    std::getline(file, line);
+    std::getline(file, line);
     for(int i = 0; i < rows; i++){
         for(int j = 0; j < colm; j++){
             int x;
             if (!(file >> x)) {
-                std::cerr << "Error: błąd czytania w lini" << (i + 1) << "\n";
+                std::cerr << "Error: blad czytania w lini" << (i + 1) << "\n";
                 return {};
             }
             std::get<0>(problem[i][j]) = x- 1;
@@ -94,11 +99,10 @@ std::vector<Job> readProblem2(const std::string& filename, std::tuple<int,int>* 
     return problem;
 }
 
-std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtime, std::tuple<int,int> info){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
+std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtime, std::tuple<int,int>* info1){ //rozwiązuje vector problemu z limitem czasowym, metoda GRASP
     const std::chrono::seconds timeout(maxtime);
     auto start_time = std::chrono::steady_clock::now();
-
-
+    std::tuple<int,int> info = *info1;
     int par0 = PARM * std::get<1>(info); //ile maszyn - tunning parametr
     int par1 = PARP *  std::get<0>(info); //ile procesóww - tunning parametr+
 
@@ -409,10 +413,10 @@ int main(int argc, char* argv[]){
     */
     if(argc > 3){
         int y = atoi(argv[3]);
-        solution = solveProblem(&problem, y, info);
+        solution = solveProblem(&problem, y, &info);
     }
     else{
-        solution = solveProblem(&problem, MAX_TIME, info);
+        solution = solveProblem(&problem, MAX_TIME, &info);
     }
     return 0;
 }
