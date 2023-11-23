@@ -11,8 +11,8 @@
 #include<stdexcept>
 
 #define MAX_TIME 150
-#define PARM 0.6
-#define PARP 0.5
+#define PARM 0.1
+#define PARP 0.7
 
 using Task = std::tuple<int,int>;
 using Job = std::vector<Task>;
@@ -106,10 +106,12 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtim
     auto start_time = std::chrono::steady_clock::now();
     std::tuple<int,int> info = *info1;
     int par0 = PARM * std::get<1>(info); //ile maszyn - tunning parametr
-    int par1 = PARP *  std::get<0>(info); //ile procesóww - tunning parametr+
-
+    int par1 = PARP * std::get<0>(info); //ile procesóww - tunning parametr+
+    if(par1 == 0){
+        par1 = 1;
+    }
     std::vector<Job> zad;
-    for(int i = 0; i < danezad->size(); i++){
+    for(int i = 0; i < std::get<0>(info); i++){
         zad.push_back({});
         for(int j = 0; j < danezad->at(i).size(); j++){
             zad.at(i).push_back(danezad->at(i).at(j));
@@ -145,7 +147,6 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtim
             sol2[i].reserve(std::get<1>(info));
             localSol[i].reserve(std::get<1>(info));
     }
-
     //*/
 
 
@@ -191,6 +192,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtim
                 }
                 std::cout << "\n";
             }
+            //std::cout << ilePow;
             return sol;
             /*
             for(int i = 0; i < sol.size(); i++){
@@ -294,7 +296,7 @@ std::vector<std::vector<int>> solveProblem(std::vector<Job>* danezad, int maxtim
             //std::cout << std::get<1>(chosenElement) << " ";
             //std::cout << "Checkpoint FindOriginal in\n";
             int originalTaskId = -1;
-            for(int i = 0; i <std::get<0>(info); i++){
+            for(int i = 0; i < std::get<0>(info); i++){
                 if((std::get<0>(localZad[i][0]) == std::get<0>(chosenElement)) && (std::get<1>(localZad[i][0]) == std::get<1>(chosenElement)) && (!localZad.at(i).empty())){
                     originalTaskId = i;
                     //std::cout << std::get<1>(chosenElement) << " "<<  originalTaskId << " Found!\n";
@@ -415,6 +417,10 @@ int main(int argc, char* argv[]){
     std::tuple<int,int> info;
     std::vector<std::vector<int>> solution;
     std::vector<Job> problem;
+    if(argc < 3){
+        std::cerr << "Niepoprawny format\n";
+        return 1;
+    }
     int x = atoi(argv[2]);
     if(x == 0){
         problem = readProblem1(argv[1], &info);
@@ -434,6 +440,7 @@ int main(int argc, char* argv[]){
         std::cout << "\n";
     }
     */
+   //std::get<0>(info) = std::get<0>(info) - 16; -> zmniejszenie instancji
     if(argc > 3){
         int y = atoi(argv[3]);
         solution = solveProblem(&problem, y, &info);
